@@ -74,6 +74,9 @@ export abstract class DataSource {
     return Promise.resolve();
   }
 
+  renameColumn(oldKey: string, newKey: string): void {
+  }
+
   setSort(conf: Array<any>, doEmit?: boolean): void {
     if (doEmit) {
       this.emitOnChanged('sort');

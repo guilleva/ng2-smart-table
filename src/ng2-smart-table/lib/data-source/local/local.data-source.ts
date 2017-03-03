@@ -133,6 +133,24 @@ export class LocalDataSource extends DataSource {
 
   /**
    *
+   * @param oldKey
+   * @param newKey
+   * @returns {LocalDataSource}
+   */
+  renameColumn(oldKey: string, newKey: string): LocalDataSource {
+    if (oldKey !== newKey) {
+        const data = [];
+        this.data.forEach((o) => {
+          o[newKey] =  o[oldKey];
+          delete o[oldKey];
+        });
+        this.emitOnChanged('columnRenamed');
+    }
+    return this;
+  }
+
+  /**
+   *
    * Array of conf objects
    * [
    *  {field: string, search: string, filter: Function|null},
@@ -155,7 +173,7 @@ export class LocalDataSource extends DataSource {
     }
     this.filterConf.andOperator = andOperator;
     this.pagingConf['page'] = 1;
-    
+
     super.setFilter(conf, andOperator, doEmit);
     return this;
   }

@@ -14,6 +14,7 @@ export class Ng2SmartTableTheadComponent {
     @Input() createConfirm: EventEmitter<any>;
 
     @Output() sort = new EventEmitter<any>();
+    @Output() change = new EventEmitter<any>();
     @Output() selectAllRows = new EventEmitter<any>();
     @Output() create = new EventEmitter<any>();
     @Output() filter = new EventEmitter<any>();

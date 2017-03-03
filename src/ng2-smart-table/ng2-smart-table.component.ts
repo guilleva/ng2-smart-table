@@ -154,6 +154,10 @@ export class Ng2SmartTableComponent implements OnChanges {
     this.resetAllSelector();
   }
 
+  change($event: any) {
+    this.resetAllSelector();
+  }
+
   filter($event: any) {
     this.resetAllSelector();
   }
