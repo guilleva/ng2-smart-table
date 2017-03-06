@@ -54,12 +54,14 @@ export class TitleComponent implements OnInit {
   }
 
   columnSelected(selectedItem: CompleterItem) {
-    const oldKey = this.column.id;
-    const newKey = selectedItem.originalObject.value;
-    if (oldKey !== newKey) {
-      this.column.id = newKey;
-      this.source.renameColumn(oldKey, newKey);
-      this.change.emit(selectedItem);
+    if (selectedItem && selectedItem.originalObject) {
+      const oldKey = this.column.id;
+      const newKey = selectedItem.originalObject.value;
+      if (oldKey !== newKey) {
+        this.column.id = newKey;
+        this.source.renameColumn(oldKey, newKey);
+        this.change.emit(selectedItem);
+      }
     }
   }
 
