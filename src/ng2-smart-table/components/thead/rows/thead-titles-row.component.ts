@@ -17,7 +17,7 @@ import { Grid } from '../../../lib/grid';
         [source]="source"
         [column]="column"
         (sort)="sort.emit($event)"
-        (change)="change.emit($event)">
+        (autompleteSelect)="titleChange.emit($event)">
       </ng2-st-column-title>
     </th>
     <th ng2-st-actions-title *ngIf="grid.showActionColumn('right')" [grid]="grid"></th>
@@ -30,6 +30,6 @@ export class TheadTitlesRowComponent {
   @Input() source: any;
 
   @Output() sort = new EventEmitter<any>();
-  @Output() change = new EventEmitter<any>();
+  @Output() titleChange = new EventEmitter<any>();
   @Output() selectAllRows = new EventEmitter<any>();
 }

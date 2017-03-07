@@ -12,17 +12,18 @@ import { CompleterService, CompleterData, CompleterItem } from 'ng2-completer';
           <ng2-completer
             (selected)="columnSelected($event)"
             [datasource]="dataService"
+            [(ngModel)]="selectedOption"
             placeholder="Set column name"
             [minSearchLength]="0"></ng2-completer>
     </div>
 
-    <a href="#" *ngIf="column.isSortable"
+    <a href="#" *ngIf="!column.options && column.isSortable"
                 (click)="_sort($event, column)"
                 class="ng2-smart-sort-link sort"
                 [ngClass]="currentDirection">
       <div *ngIf="column.title">{{ column.title }}</div>
     </a>
-    <span class="ng2-smart-sort" *ngIf="!column.isSortable">{{ column.title }}</span>
+    <span class="ng2-smart-sort" *ngIf="!column.options && !column.isSortable">{{ column.title }}</span>
   `
 })
 export class TitleComponent implements OnInit {
@@ -30,13 +31,16 @@ export class TitleComponent implements OnInit {
   @Input() column: Column;
   @Input() source: DataSource;
   @Output() sort = new EventEmitter<any>();
-  @Output() change = new EventEmitter<any>();
+  @Output() autompleteSelect = new EventEmitter<any>();
   protected dataService: CompleterData;
+
+  protected selectedOption: string;
 
   constructor(private completerService: CompleterService) { }
 
   ngOnInit() {
     if (this.column.options) {
+      this.selectedOption = this.column.title;
       this.dataService = this.completerService.local(this.column.options, 'title', 'title');
     }
     this.source.onChanged().subscribe((elements) => {
@@ -58,9 +62,8 @@ export class TitleComponent implements OnInit {
       const oldKey = this.column.id;
       const newKey = selectedItem.originalObject.value;
       if (oldKey !== newKey) {
-        this.column.id = newKey;
         this.source.renameColumn(oldKey, newKey);
-        this.change.emit(selectedItem);
+        this.autompleteSelect.emit({column: this.column,  selectedItem });
       }
     }
   }
