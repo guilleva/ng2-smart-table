@@ -7,6 +7,7 @@ export class Row {
   isSelected: boolean = false;
   isInEditing: boolean = false;
   cells: Array<Cell> = [];
+  class: string;
 
 
   constructor(public index: number, protected data: any, protected _dataSet: DataSet) {
@@ -19,6 +20,10 @@ export class Row {
 
   getCells() {
     return this.cells;
+  }
+
+  getClass() {
+    return this.class;
   }
 
   getData(): any {
@@ -38,6 +43,9 @@ export class Row {
 
   process(): void {
     this.cells = [];
+    if (this.data._settings) {
+      this.class = this.data._settings.class;
+    }
     this._dataSet.getColumns().forEach((column: Column) => {
       let cell = this.createCell(column);
       this.cells.push(cell);
