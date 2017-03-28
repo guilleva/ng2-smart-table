@@ -44,14 +44,15 @@ export class TitleComponent implements OnInit {
       this.dataService = this.completerService.local(this.column.options, 'title', 'title');
     }
     this.source.onChanged().subscribe((elements) => {
-      let sortConf = this.source.getSort();
+      const sortConf = this.source.getSort();
 
-      if (sortConf.length > 0 && sortConf[0]['field'] === this.column.id)
+      if (sortConf.length > 0 && sortConf[0]['field'] === this.column.id) {
         this.currentDirection = sortConf[0]['direction'];
-      else
+      } else {
         this.currentDirection = '';
+      }
 
-      sortConf.forEach((fieldConf) => {
+      sortConf.forEach((fieldConf: any) => {
 
       });
     });
@@ -75,15 +76,15 @@ export class TitleComponent implements OnInit {
       {
         field: this.column.id,
         direction: this.currentDirection,
-        compare: this.column.getCompareFunction()
-      }
+        compare: this.column.getCompareFunction(),
+      },
     ]);
     this.sort.emit(null);
   }
 
   changeSortDirection(): string {
     if (this.currentDirection) {
-      let newDirection = this.currentDirection === 'asc' ? 'desc' : 'asc';
+      const newDirection = this.currentDirection === 'asc' ? 'desc' : 'asc';
       this.currentDirection = newDirection;
     } else {
       this.currentDirection = this.column.sortDirection;

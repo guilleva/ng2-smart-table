@@ -11,12 +11,14 @@ import { Column } from '../../../lib/data-set/column';
        (autompleteSelect)="autompleteSelect.emit($event)">
       </ng2-smart-table-title>
     </div>
-  `
+  `,
 })
 export class ColumnTitleComponent {
 
   @Input() column: Column;
   @Input() source: any;
+
   @Output() sort = new EventEmitter<any>();
   @Output() autompleteSelect = new EventEmitter<any>();
+
 }

@@ -13,7 +13,7 @@ import { DefaultEditor } from './default-editor';
                    [placeholder]="cell.getColumn().getConfig().completer.placeholder || 'Start typing...'"
                    (selected)="onEditedCompleter($event)">
     </ng2-completer>
-    `
+    `,
 })
 export class CompleterEditorComponent extends DefaultEditor implements OnInit {
 
@@ -23,15 +23,15 @@ export class CompleterEditorComponent extends DefaultEditor implements OnInit {
     super();
   }
 
-  ngOnInit(): void {
+  ngOnInit() {
     if (this.cell.getColumn().editor && this.cell.getColumn().editor.type === 'completer') {
-      let config = this.cell.getColumn().getConfig().completer;
+      const config = this.cell.getColumn().getConfig().completer;
       config.dataService = this.completerService.local(config.data, config.searchFields, config.titleField);
       config.dataService.descriptionField(config.descriptionField);
     }
   }
 
-  onEditedCompleter(event): boolean {
+  onEditedCompleter(event: { title: '' }): boolean {
     this.cell.newValue = event.title;
     return false;
   }
