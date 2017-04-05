@@ -26,8 +26,10 @@ export class CompleterEditorComponent extends DefaultEditor implements OnInit {
   ngOnInit() {
     if (this.cell.getColumn().editor && this.cell.getColumn().editor.type === 'completer') {
       const config = this.cell.getColumn().getConfig().completer;
-      config.dataService = this.completerService.local(config.data, config.searchFields, config.titleField);
-      config.dataService.descriptionField(config.descriptionField);
+      if (!config.dataService) {
+        config.dataService = this.completerService.local(config.data, config.searchFields, config.titleField);
+        config.dataService.descriptionField(config.descriptionField);
+      }
     }
   }
 
