@@ -1,11 +1,17 @@
 .with-sidebar {
   position: relative;
-  padding-right: 16rem;
+
+  .main-content-body {
+    padding-left: 16rem;
+  }
+
   .fixed-sidebar {
+    display: block;
     padding: 0 1rem;
     margin-top: 2rem;
-    position: absolute;
-    right: 0;
+    position: fixed;
+    top: 0;
+    padding-top: 290px;
     width: 16rem;
     font-size: 0.875rem;
     .back-top {
@@ -13,6 +19,7 @@
       margin-bottom: 1rem;
       font-weight: bold;
     }
+
     ul {
       padding-left: 1rem;
       list-style: none;
@@ -21,10 +28,12 @@
     &.scrolled {
       position: fixed;
       top: 0;
+
       .back-top {
         display: block;
       }
     }
+
     .examples-menu {
       a.active {
         font-weight: bold;

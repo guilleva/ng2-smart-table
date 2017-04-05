@@ -2,18 +2,18 @@ import { DataSet } from './data-set';
 
 export class Column {
 
-  public title: string = '';
-  public type: string = '';
-  public class: string = '';
-  public isSortable: boolean = false;
-  public isEditable: boolean = true;
-  public isFilterable: boolean = false;
-  public sortDirection: string = '';
-  public defaultSortDirection: string = '';
-  public editor: { type: string, config: any, component: any } = { type: '', config: {}, component: null };
-  public filter: { type: string, config: any } = { type: '', config: {} };
-  public renderComponent: any = null;
-  public options: any = null;
+  title: string = '';
+  type: string = '';
+  class: string = '';
+  isSortable: boolean = false;
+  isEditable: boolean = true;
+  isFilterable: boolean = false;
+  sortDirection: string = '';
+  defaultSortDirection: string = '';
+  editor: { type: string, config: any, component: any } = { type: '', config: {}, component: null };
+  filter: { type: string, config: any } = { type: '', config: {} };
+  renderComponent: any = null;
+  options: any = null;
   compareFunction: Function;
   valuePrepareFunction: Function;
   filterFunction: Function;
@@ -22,20 +22,20 @@ export class Column {
     this.process();
   }
 
-  public getCompareFunction(): Function {
+  getCompareFunction(): Function {
     return this.compareFunction;
   }
 
-  public getValuePrepareFunction(): Function {
+  getValuePrepareFunction(): Function {
     return this.valuePrepareFunction;
   }
 
-  public getFilterFunction(): Function {
+  getFilterFunction(): Function {
     return this.filterFunction;
   }
 
-  public getConfig(): any {
-    return this.editor.config;
+  getConfig(): any {
+    return this.editor && this.editor.config;
   }
 
   getFilterType(): any {
