@@ -71,6 +71,11 @@ var LocalDataSource = (function (_super) {
         var data = this.data.slice(0);
         return Promise.resolve(this.prepareData(data));
     };
+    LocalDataSource.prototype.getFilteredAndSorted = function () {
+        var data = this.data.slice(0);
+        this.prepareData(data);
+        return Promise.resolve(this.filteredAndSorted);
+    };
     LocalDataSource.prototype.getAll = function () {
         var data = this.data.slice(0);
         return Promise.resolve(data);

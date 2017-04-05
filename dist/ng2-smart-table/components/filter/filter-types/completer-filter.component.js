@@ -21,6 +21,8 @@ import { Component } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 import { CompleterService } from 'ng2-completer';
 import { DefaultFilter } from './default-filter';
+import 'rxjs/add/operator/distinctUntilChanged';
+import 'rxjs/add/operator/debounceTime';
 var CompleterFilterComponent = (function (_super) {
     __extends(CompleterFilterComponent, _super);
     function CompleterFilterComponent(completerService) {

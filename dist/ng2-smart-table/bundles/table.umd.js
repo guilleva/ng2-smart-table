@@ -1,13 +1,13 @@
 /**
-  * @license ng2-smart-table v1.0.0
+  * @license ng2-smart-table v1.0.3
   * Copyright (c) 2017 Akveo. https://akveo.github.io/ng2-smart-table/
   * License: MIT
   */
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@angular/core'), require('@angular/common'), require('@angular/forms'), require('ng2-completer'), require('rxjs/Subject'), require('lodash'), require('@angular/http')) :
-	typeof define === 'function' && define.amd ? define(['exports', '@angular/core', '@angular/common', '@angular/forms', 'ng2-completer', 'rxjs/Subject', 'lodash', '@angular/http'], factory) :
-	(factory((global['ng2-smart-table'] = global['ng2-smart-table'] || {}),global.ng.core,global.ng.common,global.ng.forms,global.ng2completer,global.Rx,global.lodash,global.ng.http));
-}(this, (function (exports,_angular_core,_angular_common,_angular_forms,ng2Completer,rxjs_Subject,lodash,_angular_http) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@angular/core'), require('@angular/common'), require('@angular/forms'), require('ng2-completer'), require('rxjs/Subject'), require('lodash'), require('rxjs/add/operator/debounceTime'), require('rxjs/add/operator/distinctUntilChanged'), require('@angular/http')) :
+	typeof define === 'function' && define.amd ? define(['exports', '@angular/core', '@angular/common', '@angular/forms', 'ng2-completer', 'rxjs/Subject', 'lodash', 'rxjs/add/operator/debounceTime', 'rxjs/add/operator/distinctUntilChanged', '@angular/http'], factory) :
+	(factory((global['ng2-smart-table'] = global['ng2-smart-table'] || {}),global.ng.core,global.ng.common,global.ng.forms,global.ng2completer,global.Rx,global.lodash,global.Rx.Observable.prototype,global.Rx.Observable.prototype,global.ng.http));
+}(this, (function (exports,_angular_core,_angular_common,_angular_forms,ng2Completer,rxjs_Subject,lodash,rxjs_add_operator_debounceTime,rxjs_add_operator_distinctUntilChanged,_angular_http) { 'use strict';
 
 /**
  * Extending object that entered in first argument.
@@ -154,6 +154,9 @@ var Row = (function () {
     Row.prototype.getData = function () {
         return this.data;
     };
+    Row.prototype.getIsSelected = function () {
+        return this.isSelected;
+    };
     Row.prototype.getNewData = function () {
         var values = Object.assign({}, this.data);
         this.getCells().forEach(function (cell) { return values[cell.getColumn().id] = cell.newValue; });
@@ -210,7 +213,7 @@ var Column = (function () {
         return this.filterFunction;
     };
     Column.prototype.getConfig = function () {
-        return this.editor.config;
+        return this.editor && this.editor.config;
     };
     Column.prototype.getFilterType = function () {
         return this.filter && this.filter.type;
@@ -271,6 +274,12 @@ var DataSet = (function () {
     DataSet.prototype.getRows = function () {
         return this.rows;
     };
+    DataSet.prototype.getFirstRow = function () {
+        return this.rows[0];
+    };
+    DataSet.prototype.getLastRow = function () {
+        return this.rows[this.rows.length - 1];
+    };
     DataSet.prototype.findRowByData = function (data) {
         return this.rows.find(function (row) { return row.getData() === data; });
     };
@@ -280,8 +289,9 @@ var DataSet = (function () {
         });
     };
     DataSet.prototype.selectRow = function (row) {
+        var previousIsSelected = row.isSelected;
         this.deselectAll();
-        row.isSelected = true;
+        row.isSelected = !previousIsSelected;
         this.selectedRow = row;
         return this.selectedRow;
     };
@@ -567,12 +577,17 @@ var Grid = (function () {
     };
     Grid.prototype.getSelectedRows = function () {
         return this.dataSet.getRows()
-            .filter(function (r) { return r.isSelected; })
-            .map(function (r) { return r.getData(); });
+            .filter(function (r) { return r.isSelected; });
     };
     Grid.prototype.selectAllRows = function (status) {
         this.dataSet.getRows()
             .forEach(function (r) { return r.isSelected = status; });
+    };
+    Grid.prototype.getFirstRow = function () {
+        return this.dataSet.getFirstRow();
+    };
+    Grid.prototype.getLastRow = function () {
+        return this.dataSet.getLastRow();
     };
     return Grid;
 }());
@@ -935,8 +950,10 @@ var CompleterEditorComponent = (function (_super) {
     CompleterEditorComponent.prototype.ngOnInit = function () {
         if (this.cell.getColumn().editor && this.cell.getColumn().editor.type === 'completer') {
             var config = this.cell.getColumn().getConfig().completer;
-            config.dataService = this.completerService.local(config.data, config.searchFields, config.titleField);
-            config.dataService.descriptionField(config.descriptionField);
+            if (!config.dataService) {
+                config.dataService = this.completerService.local(config.data, config.searchFields, config.titleField);
+                config.dataService.descriptionField(config.descriptionField);
+            }
         }
     };
     CompleterEditorComponent.prototype.onEditedCompleter = function (event) {
@@ -1287,6 +1304,15 @@ var FilterComponent = (function () {
             var filterConf = _this.source.getFilter();
             if (filterConf && filterConf.filters && filterConf.filters.length === 0) {
                 _this.query = '';
+                // add a check for existing filters an set the query if one exists for this column
+                // this covers instances where the filter is set by user code while maintaining existing functionality
+            }
+            else if (filterConf && filterConf.filters && filterConf.filters.length > 0) {
+                filterConf.filters.forEach(function (k, v) {
+                    if (k.field == _this.column.id) {
+                        _this.query = k.search;
+                    }
+                });
             }
         });
     };
@@ -1614,6 +1640,7 @@ var PagerComponent = (function () {
         var _this = this;
         this.source.onChanged().subscribe(function (changes) {
             _this.page = _this.source.getPaging().page;
+            _this.perPage = _this.source.getPaging().perPage;
             _this.count = _this.source.count();
             if (_this.isPageOutOfBounce()) {
                 _this.source.setPage(--_this.page);
@@ -1677,10 +1704,6 @@ var PagerComponent = (function () {
 }());
 __decorate$23([
     _angular_core.Input(),
-    __metadata$19("design:type", Number)
-], PagerComponent.prototype, "perPage", void 0);
-__decorate$23([
-    _angular_core.Input(),
     __metadata$19("design:type", DataSource)
 ], PagerComponent.prototype, "source", void 0);
 __decorate$23([
@@ -1739,6 +1762,7 @@ var Ng2SmartTableTbodyComponent = (function () {
         this.userSelectRow = new _angular_core.EventEmitter();
         this.editRowSelect = new _angular_core.EventEmitter();
         this.multipleSelectRow = new _angular_core.EventEmitter();
+        this.rowHover = new _angular_core.EventEmitter();
     }
     Ng2SmartTableTbodyComponent.prototype.onDoubleClickRow = function (event, row) {
         event.preventDefault();
@@ -1804,11 +1828,15 @@ __decorate$25([
     _angular_core.Output(),
     __metadata$20("design:type", Object)
 ], Ng2SmartTableTbodyComponent.prototype, "multipleSelectRow", void 0);
+__decorate$25([
+    _angular_core.Output(),
+    __metadata$20("design:type", Object)
+], Ng2SmartTableTbodyComponent.prototype, "rowHover", void 0);
 Ng2SmartTableTbodyComponent = __decorate$25([
     _angular_core.Component({
         selector: '[ng2-st-tbody]',
         styles: [":host .ng2-smart-row.selected{background:rgba(0,0,0,.05)}:host .ng2-smart-row .ng2-smart-actions.ng2-smart-action-multiple-select{text-align:center} /*# sourceMappingURL=tbody.component.css.map */ "],
-        template: "<tr *ngFor=\"let row of grid.getRows()\" (click)=\"userSelectRow.emit(row)\" (dblclick)=\"onDoubleClickRow($event, row)\" class=\"ng2-smart-row {{row.getClass()}}\" [ngClass]=\"{selected: row.isSelected}\"><td *ngIf=\"grid.isMultiSelectVisible()\" class=\"ng2-smart-actions ng2-smart-action-multiple-select\" (click)=\"multipleSelectRow.emit(row)\"><input type=\"checkbox\" class=\"form-control\" [ngModel]=\"row.isSelected\"></td><td *ngIf=\"!row.isInEditing && grid.showActionColumn('left')\" class=\"ng2-smart-actions\"><ng2-st-tbody-edit-delete [grid]=\"grid\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" (edit)=\"edit.emit(row)\" (delete)=\"delete.emit(row)\" (editRowSelect)=\"editRowSelect.emit($event)\" [row]=\"row\" [source]=\"source\"></ng2-st-tbody-edit-delete></td><td *ngIf=\"row.isInEditing\" class=\"ng2-smart-actions\"><ng2-st-tbody-create-cancel [grid]=\"grid\" [row]=\"row\" [editConfirm]=\"editConfirm\"></ng2-st-tbody-create-cancel></td><td *ngFor=\"let cell of row.getCells()\"><ng2-smart-table-cell [cell]=\"cell\" [grid]=\"grid\" [row]=\"row\" [isNew]=\"false\" [mode]=\"grid.getSetting('mode')\" [editConfirm]=\"editConfirm\" [inputClass]=\"grid.getSetting('edit.inputClass')\" [isInEditing]=\"row.isInEditing\"></ng2-smart-table-cell></td><td *ngIf=\"!row.isInEditing && grid.showActionColumn('right')\" class=\"ng2-smart-actions\"><ng2-st-tbody-edit-delete [grid]=\"grid\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" [row]=\"row\" [source]=\"source\" (edit)=\"edit.emit(row)\" (delete)=\"delete.emit(row)\" (editRowSelect)=\"editRowSelect.emit($event)\"></ng2-st-tbody-edit-delete></td></tr><tr *ngIf=\"grid.getRows().length == 0\"><td [attr.colspan]=\"grid.getColumns().length + (grid.getSetting('actions.add') || grid.getSetting('actions.edit') || grid.getSetting('actions.delete'))\">{{ grid.getSetting('noDataMessage') }}</td></tr>",
+        template: "<tr *ngFor=\"let row of grid.getRows()\" (click)=\"userSelectRow.emit(row)\" (mouseover)=\"rowHover.emit(row)\" (dblclick)=\"onDoubleClickRow($event, row)\" class=\"ng2-smart-row\" [ngClass]=\"{selected: row.isSelected}\"><td *ngIf=\"grid.isMultiSelectVisible()\" class=\"ng2-smart-actions ng2-smart-action-multiple-select\" (click)=\"multipleSelectRow.emit(row)\"><input type=\"checkbox\" class=\"form-control\" [ngModel]=\"row.isSelected\"></td><td *ngIf=\"!row.isInEditing && grid.showActionColumn('left')\" class=\"ng2-smart-actions\"><ng2-st-tbody-edit-delete [grid]=\"grid\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" (edit)=\"edit.emit(row)\" (delete)=\"delete.emit(row)\" (editRowSelect)=\"editRowSelect.emit($event)\" [row]=\"row\" [source]=\"source\"></ng2-st-tbody-edit-delete></td><td *ngIf=\"row.isInEditing && grid.showActionColumn('left')\" class=\"ng2-smart-actions\"><ng2-st-tbody-create-cancel [grid]=\"grid\" [row]=\"row\" [editConfirm]=\"editConfirm\"></ng2-st-tbody-create-cancel></td><td *ngFor=\"let cell of row.getCells()\"><ng2-smart-table-cell [cell]=\"cell\" [grid]=\"grid\" [row]=\"row\" [isNew]=\"false\" [mode]=\"grid.getSetting('mode')\" [editConfirm]=\"editConfirm\" [inputClass]=\"grid.getSetting('edit.inputClass')\" [isInEditing]=\"row.isInEditing\"></ng2-smart-table-cell></td><td *ngIf=\"row.isInEditing && grid.showActionColumn('right')\" class=\"ng2-smart-actions\"><ng2-st-tbody-create-cancel [grid]=\"grid\" [row]=\"row\" [editConfirm]=\"editConfirm\"></ng2-st-tbody-create-cancel></td><td *ngIf=\"!row.isInEditing && grid.showActionColumn('right')\" class=\"ng2-smart-actions\"><ng2-st-tbody-edit-delete [grid]=\"grid\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" [row]=\"row\" [source]=\"source\" (edit)=\"edit.emit(row)\" (delete)=\"delete.emit(row)\" (editRowSelect)=\"editRowSelect.emit($event)\"></ng2-st-tbody-edit-delete></td></tr><tr *ngIf=\"grid.getRows().length == 0\"><td [attr.colspan]=\"grid.getColumns().length + (grid.getSetting('actions.add') || grid.getSetting('actions.edit') || grid.getSetting('actions.delete'))\">{{ grid.getSetting('noDataMessage') }}</td></tr>",
     })
 ], Ng2SmartTableTbodyComponent);
 
@@ -2299,7 +2327,7 @@ TitleComponent = __decorate$35([
     _angular_core.Component({
         selector: 'ng2-smart-table-title',
         styles: ["a.sort.asc,a.sort.desc{font-weight:700}a.sort.asc::after,a.sort.desc::after{content:'';display:inline-block;width:0;height:0;border-bottom:4px solid rgba(0,0,0,.3);border-top:4px solid transparent;border-left:4px solid transparent;border-right:4px solid transparent;margin-bottom:2px}a.sort.desc::after{-webkit-transform:rotate(-180deg);transform:rotate(-180deg);margin-bottom:-2px} /*# sourceMappingURL=title.component.css.map */ "],
-        template: "\n    <div *ngIf=\"column.options\">\n          <ng2-completer\n            (selected)=\"columnSelected($event)\"\n            [datasource]=\"dataService\"\n            [(ngModel)]=\"selectedOption\"\n            placeholder=\"Set column name\"\n            [minSearchLength]=\"0\"></ng2-completer>\n    </div>\n\n    <a href=\"#\" *ngIf=\"!column.options && column.isSortable\"\n                (click)=\"_sort($event, column)\"\n                class=\"ng2-smart-sort-link sort\"\n                [ngClass]=\"currentDirection\">\n      <div *ngIf=\"column.title\">{{ column.title }}</div>\n    </a>\n    <span class=\"ng2-smart-sort\" *ngIf=\"!column.options && !column.isSortable\">{{ column.title }}</span>\n  "
+        template: "\n    <div *ngIf=\"column.options\">\n          <ng2-completer\n            (selected)=\"columnSelected($event)\"\n            [datasource]=\"dataService\"\n            [(ngModel)]=\"selectedOption\"\n            placeholder=\"Set column name\"\n            [minSearchLength]=\"0\"></ng2-completer>\n    </div>\n\n    <a href=\"#\" *ngIf=\"!column.options && column.isSortable\"\n                (click)=\"_sort($event, column)\"\n                class=\"ng2-smart-sort-link sort\"\n                [ngClass]=\"currentDirection\">\n      <div *ngIf=\"column.title\">{{ column.title }}</div>\n    </a>\n    <span class=\"ng2-smart-sort\" *ngIf=\"!column.options && !column.isSortable\">{{ column.title }}</span>\n  ",
     }),
     __metadata$29("design:paramtypes", [ng2Completer.CompleterService])
 ], TitleComponent);
@@ -2381,7 +2409,7 @@ __decorate$37([
 TheadFormRowComponent = __decorate$37([
     _angular_core.Component({
         selector: '[ng2-st-thead-form-row]',
-        template: "\n      <td *ngIf=\"grid.isMultiSelectVisible()\"></td>\n      <td class=\"ng2-smart-actions\">\n        <ng2-st-actions [grid]=\"grid\" (create)=\"onCreate($event)\"></ng2-st-actions>\n      </td>\n      <td *ngFor=\"let cell of grid.getNewRow().getCells()\">\n        <ng2-smart-table-cell [cell]=\"cell\"\n                              [grid]=\"grid\"\n                              [isNew]=\"true\"\n                              [createConfirm]=\"createConfirm\"\n                              [inputClass]=\"grid.getSetting('add.inputClass')\"\n                              [isInEditing]=\"grid.getNewRow().isInEditing\"\n                              (edited)=\"onCreate($event)\">\n        </ng2-smart-table-cell>\n      </td>\n  ",
+        template: "\n      <td *ngIf=\"grid.isMultiSelectVisible()\"></td>\n      <td  *ngIf= \"grid.showActionColumn('left')\"  class=\"ng2-smart-actions\">\n        <ng2-st-actions [grid]=\"grid\" (create)=\"onCreate($event)\"></ng2-st-actions>\n      </td>\n      <td *ngFor=\"let cell of grid.getNewRow().getCells()\">\n        <ng2-smart-table-cell [cell]=\"cell\"\n                              [grid]=\"grid\"\n                              [isNew]=\"true\"\n                              [createConfirm]=\"createConfirm\"\n                              [inputClass]=\"grid.getSetting('add.inputClass')\"\n                              [isInEditing]=\"grid.getNewRow().isInEditing\"\n                              (edited)=\"onCreate($event)\">\n        </ng2-smart-table-cell>\n      </td>\n      <td  *ngIf= \"grid.showActionColumn('right')\"  class=\"ng2-smart-actions\">\n        <ng2-st-actions [grid]=\"grid\" (create)=\"onCreate($event)\"></ng2-st-actions>\n      </td>\n  ",
     })
 ], TheadFormRowComponent);
 
@@ -2584,6 +2612,11 @@ var LocalDataSource = (function (_super) {
     LocalDataSource.prototype.getElements = function () {
         var data = this.data.slice(0);
         return Promise.resolve(this.prepareData(data));
+    };
+    LocalDataSource.prototype.getFilteredAndSorted = function () {
+        var data = this.data.slice(0);
+        this.prepareData(data);
+        return Promise.resolve(this.filteredAndSorted);
     };
     LocalDataSource.prototype.getAll = function () {
         var data = this.data.slice(0);
@@ -2794,6 +2827,7 @@ var Ng2SmartTableComponent = (function () {
         this.editConfirm = new _angular_core.EventEmitter();
         this.createConfirm = new _angular_core.EventEmitter();
         this.titleChange = new _angular_core.EventEmitter();
+        this.rowHover = new _angular_core.EventEmitter();
         this.defaultSettings = {
             mode: 'inline',
             selectMode: 'single',
@@ -2864,34 +2898,37 @@ var Ng2SmartTableComponent = (function () {
     Ng2SmartTableComponent.prototype.onUserSelectRow = function (row) {
         if (this.grid.getSetting('selectMode') !== 'multi') {
             this.grid.selectRow(row);
-            this._onUserSelectRow(row.getData());
-            this.onSelectRow(row);
+            this.emitUserSelectRow(row);
+            this.emitSelectRow(row);
         }
+    };
+    Ng2SmartTableComponent.prototype.onRowHover = function (row) {
+        this.rowHover.emit(row);
     };
     Ng2SmartTableComponent.prototype.multipleSelectRow = function (row) {
         this.grid.multipleSelectRow(row);
-        this._onUserSelectRow(row.getData());
-        this._onSelectRow(row.getData());
+        this.emitUserSelectRow(row);
+        this.emitSelectRow(row);
     };
     Ng2SmartTableComponent.prototype.onSelectAllRows = function ($event) {
         this.isAllSelected = !this.isAllSelected;
         this.grid.selectAllRows(this.isAllSelected);
         var selectedRows = this.grid.getSelectedRows();
-        this._onUserSelectRow(selectedRows[0], selectedRows);
-        this._onSelectRow(selectedRows[0]);
+        this.emitUserSelectRow(null);
+        this.emitSelectRow(null);
     };
     Ng2SmartTableComponent.prototype.onSelectRow = function (row) {
         this.grid.selectRow(row);
-        this._onSelectRow(row.getData());
+        this.emitSelectRow(row);
     };
     Ng2SmartTableComponent.prototype.onMultipleSelectRow = function (row) {
-        this._onSelectRow(row.getData());
+        this.emitSelectRow(row);
     };
     Ng2SmartTableComponent.prototype.initGrid = function () {
         var _this = this;
         this.source = this.prepareSource();
         this.grid = new Grid(this.source, this.prepareSettings());
-        this.grid.onSelectRow().subscribe(function (row) { return _this.onSelectRow(row); });
+        this.grid.onSelectRow().subscribe(function (row) { return _this.emitSelectRow(row); });
     };
     Ng2SmartTableComponent.prototype.prepareSource = function () {
         if (this.source instanceof DataSource) {
@@ -2917,22 +2954,24 @@ var Ng2SmartTableComponent = (function () {
     Ng2SmartTableComponent.prototype.filter = function ($event) {
         this.resetAllSelector();
     };
-    Ng2SmartTableComponent.prototype._onSelectRow = function (data) {
-        this.rowSelect.emit({
-            data: data || null,
-            source: this.source,
-        });
-    };
-    Ng2SmartTableComponent.prototype._onUserSelectRow = function (data, selected) {
-        if (selected === void 0) { selected = []; }
-        this.userRowSelect.emit({
-            data: data || null,
-            source: this.source,
-            selected: selected.length ? selected : this.grid.getSelectedRows(),
-        });
-    };
     Ng2SmartTableComponent.prototype.resetAllSelector = function () {
         this.isAllSelected = false;
+    };
+    Ng2SmartTableComponent.prototype.emitUserSelectRow = function (row) {
+        var selectedRows = this.grid.getSelectedRows();
+        this.userRowSelect.emit({
+            data: row ? row.getData() : null,
+            isSelected: row ? row.getIsSelected() : null,
+            source: this.source,
+            selected: selectedRows && selectedRows.length ? selectedRows.map(function (r) { return r.getData(); }) : [],
+        });
+    };
+    Ng2SmartTableComponent.prototype.emitSelectRow = function (row) {
+        this.rowSelect.emit({
+            data: row ? row.getData() : null,
+            isSelected: row ? row.getIsSelected() : null,
+            source: this.source,
+        });
     };
     return Ng2SmartTableComponent;
 }());
@@ -2980,11 +3019,15 @@ __decorate$39([
     _angular_core.Output(),
     __metadata$33("design:type", Object)
 ], Ng2SmartTableComponent.prototype, "titleChange", void 0);
+__decorate$39([
+    _angular_core.Output(),
+    __metadata$33("design:type", _angular_core.EventEmitter)
+], Ng2SmartTableComponent.prototype, "rowHover", void 0);
 Ng2SmartTableComponent = __decorate$39([
     _angular_core.Component({
         selector: 'ng2-smart-table',
         styles: [":host /deep/ *{box-sizing:border-box;font-family:\"Open Sans\",\"Helvetica Neue\",Helvetica,Arial,sans-serif}:host /deep/ button,:host /deep/ input,:host /deep/ optgroup,:host /deep/ select,:host /deep/ textarea{color:inherit;font:inherit;margin:0}:host /deep/ table{font-size:16px;line-height:1.5;color:#606c71;border-collapse:collapse;border-spacing:0;display:table;width:100%;max-width:100%;overflow:auto;word-break:normal;word-break:keep-all}:host /deep/ table tr th{font-weight:700}:host /deep/ table tr section{font-size:.75rem;font-weight:700}:host /deep/ table tr td,:host /deep/ table tr th{font-size:.875rem;margin:0;padding:.5rem 1rem;border:1px solid #e9ebec}:host /deep/ a{color:#1e6bb8;text-decoration:none}:host /deep/ a:hover{text-decoration:underline} /*# sourceMappingURL=ng2-smart-table.component.css.map */ "],
-        template: "<table [id]=\"grid.getSetting('attr.id')\" [ngClass]=\"grid.getSetting('attr.class')\"><thead ng2-st-thead *ngIf=\"!grid.getSetting('hideHeader') || !grid.getSetting('hideSubHeader')\" [grid]=\"grid\" [isAllSelected]=\"isAllSelected\" [source]=\"source\" [createConfirm]=\"createConfirm\" (create)=\"create.emit($event)\" (selectAllRows)=\"onSelectAllRows($event)\" (sort)=\"sort($event)\" (titleChange)=\"titleChange.emit($event)\" (filter)=\"filter($event)\"></thead><tbody ng2-st-tbody [grid]=\"grid\" [source]=\"source\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" (edit)=\"edit.emit($event)\" (delete)=\"delete.emit($event)\" (userSelectRow)=\"onUserSelectRow($event)\" (editRowSelect)=\"editRowSelect($event)\" (multipleSelectRow)=\"multipleSelectRow($event)\"></tbody></table><ng2-smart-table-pager *ngIf=\"grid.getSetting('pager.display')\" [source]=\"source\" [perPage]=\"grid.getSetting('pager.perPage')\" (changePage)=\"changePage($event)\"></ng2-smart-table-pager>",
+        template: "<table [id]=\"grid.getSetting('attr.id')\" [ngClass]=\"grid.getSetting('attr.class')\"><thead ng2-st-thead *ngIf=\"!grid.getSetting('hideHeader') || !grid.getSetting('hideSubHeader')\" [grid]=\"grid\" [isAllSelected]=\"isAllSelected\" [source]=\"source\" [createConfirm]=\"createConfirm\" (create)=\"create.emit($event)\" (selectAllRows)=\"onSelectAllRows($event)\" (sort)=\"sort($event)\" (titleChange)=\"titleChange.emit($event)\" (filter)=\"filter($event)\"></thead><tbody ng2-st-tbody [grid]=\"grid\" [source]=\"source\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" (edit)=\"edit.emit($event)\" (delete)=\"delete.emit($event)\" (userSelectRow)=\"onUserSelectRow($event)\" (editRowSelect)=\"editRowSelect($event)\" (multipleSelectRow)=\"multipleSelectRow($event)\" (rowHover)=\"onRowHover($event)\"></tbody></table><ng2-smart-table-pager *ngIf=\"grid.getSetting('pager.display')\" [source]=\"source\" (changePage)=\"changePage($event)\"></ng2-smart-table-pager>",
     })
 ], Ng2SmartTableComponent);
 

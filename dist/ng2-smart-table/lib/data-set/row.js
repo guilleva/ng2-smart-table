@@ -21,6 +21,9 @@ var Row = (function () {
     Row.prototype.getData = function () {
         return this.data;
     };
+    Row.prototype.getIsSelected = function () {
+        return this.isSelected;
+    };
     Row.prototype.getNewData = function () {
         var values = Object.assign({}, this.data);
         this.getCells().forEach(function (cell) { return values[cell.getColumn().id] = cell.newValue; });

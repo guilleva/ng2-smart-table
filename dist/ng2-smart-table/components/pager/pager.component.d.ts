@@ -1,12 +1,12 @@
 import { EventEmitter, OnInit } from '@angular/core';
 import { DataSource } from '../../lib/data-source/data-source';
 export declare class PagerComponent implements OnInit {
-    perPage: number;
     source: DataSource;
     changePage: EventEmitter<any>;
     protected pages: Array<any>;
     protected page: number;
     protected count: number;
+    protected perPage: number;
     ngOnInit(): void;
     /**
      * We change the page here depending on the action performed against data source

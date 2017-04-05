@@ -18,6 +18,7 @@ var PagerComponent = (function () {
         var _this = this;
         this.source.onChanged().subscribe(function (changes) {
             _this.page = _this.source.getPaging().page;
+            _this.perPage = _this.source.getPaging().perPage;
             _this.count = _this.source.count();
             if (_this.isPageOutOfBounce()) {
                 _this.source.setPage(--_this.page);
@@ -79,10 +80,6 @@ var PagerComponent = (function () {
     };
     return PagerComponent;
 }());
-__decorate([
-    Input(),
-    __metadata("design:type", Number)
-], PagerComponent.prototype, "perPage", void 0);
 __decorate([
     Input(),
     __metadata("design:type", DataSource)

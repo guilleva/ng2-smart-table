@@ -13,5 +13,6 @@ export declare class Ng2SmartTableTbodyComponent {
     userSelectRow: EventEmitter<any>;
     editRowSelect: EventEmitter<any>;
     multipleSelectRow: EventEmitter<any>;
+    rowHover: EventEmitter<any>;
     onDoubleClickRow(event: any, row: any): void;
 }

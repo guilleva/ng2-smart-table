@@ -14,6 +14,7 @@ export declare class Ng2SmartTableComponent implements OnChanges {
     editConfirm: EventEmitter<any>;
     createConfirm: EventEmitter<any>;
     titleChange: EventEmitter<any>;
+    rowHover: EventEmitter<any>;
     grid: Grid;
     defaultSettings: Object;
     isAllSelected: boolean;
@@ -22,6 +23,7 @@ export declare class Ng2SmartTableComponent implements OnChanges {
     }): void;
     editRowSelect(row: Row): void;
     onUserSelectRow(row: Row): void;
+    onRowHover(row: Row): void;
     multipleSelectRow(row: Row): void;
     onSelectAllRows($event: any): void;
     onSelectRow(row: Row): void;
@@ -33,7 +35,7 @@ export declare class Ng2SmartTableComponent implements OnChanges {
     sort($event: any): void;
     change($event: any): void;
     filter($event: any): void;
-    private _onSelectRow(data);
-    private _onUserSelectRow(data, selected?);
     private resetAllSelector();
+    private emitUserSelectRow(row);
+    private emitSelectRow(row);
 }

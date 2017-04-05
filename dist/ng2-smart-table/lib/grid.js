@@ -202,12 +202,17 @@ var Grid = (function () {
     };
     Grid.prototype.getSelectedRows = function () {
         return this.dataSet.getRows()
-            .filter(function (r) { return r.isSelected; })
-            .map(function (r) { return r.getData(); });
+            .filter(function (r) { return r.isSelected; });
     };
     Grid.prototype.selectAllRows = function (status) {
         this.dataSet.getRows()
             .forEach(function (r) { return r.isSelected = status; });
+    };
+    Grid.prototype.getFirstRow = function () {
+        return this.dataSet.getFirstRow();
+    };
+    Grid.prototype.getLastRow = function () {
+        return this.dataSet.getLastRow();
     };
     return Grid;
 }());

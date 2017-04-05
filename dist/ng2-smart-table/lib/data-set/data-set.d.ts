@@ -12,6 +12,8 @@ export declare class DataSet {
     setData(data: Array<any>): void;
     getColumns(): Array<Column>;
     getRows(): Array<Row>;
+    getFirstRow(): Row;
+    getLastRow(): Row;
     findRowByData(data: any): Row;
     deselectAll(): void;
     selectRow(row: Row): Row;

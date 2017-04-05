@@ -22,6 +22,15 @@ var FilterComponent = (function () {
             var filterConf = _this.source.getFilter();
             if (filterConf && filterConf.filters && filterConf.filters.length === 0) {
                 _this.query = '';
+                // add a check for existing filters an set the query if one exists for this column
+                // this covers instances where the filter is set by user code while maintaining existing functionality
+            }
+            else if (filterConf && filterConf.filters && filterConf.filters.length > 0) {
+                filterConf.filters.forEach(function (k, v) {
+                    if (k.field == _this.column.id) {
+                        _this.query = k.search;
+                    }
+                });
             }
         });
     };

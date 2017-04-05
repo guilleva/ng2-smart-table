@@ -14,6 +14,7 @@ export declare class LocalDataSource extends DataSource {
     update(element: any, values: any): Promise<any>;
     find(element: any): Promise<any>;
     getElements(): Promise<any>;
+    getFilteredAndSorted(): Promise<any>;
     getAll(): Promise<any>;
     reset(silent?: boolean): void;
     empty(): Promise<any>;

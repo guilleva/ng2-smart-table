@@ -22,6 +22,12 @@ var DataSet = (function () {
     DataSet.prototype.getRows = function () {
         return this.rows;
     };
+    DataSet.prototype.getFirstRow = function () {
+        return this.rows[0];
+    };
+    DataSet.prototype.getLastRow = function () {
+        return this.rows[this.rows.length - 1];
+    };
     DataSet.prototype.findRowByData = function (data) {
         return this.rows.find(function (row) { return row.getData() === data; });
     };
@@ -31,8 +37,9 @@ var DataSet = (function () {
         });
     };
     DataSet.prototype.selectRow = function (row) {
+        var previousIsSelected = row.isSelected;
         this.deselectAll();
-        row.isSelected = true;
+        row.isSelected = !previousIsSelected;
         this.selectedRow = row;
         return this.selectedRow;
     };

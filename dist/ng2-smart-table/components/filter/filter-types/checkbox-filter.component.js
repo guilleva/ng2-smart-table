@@ -20,6 +20,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { DefaultFilter } from './default-filter';
+import 'rxjs/add/operator/debounceTime';
 var CheckboxFilterComponent = (function (_super) {
     __extends(CheckboxFilterComponent, _super);
     function CheckboxFilterComponent() {

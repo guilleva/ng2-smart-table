@@ -20,6 +20,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { DefaultFilter } from './default-filter';
+import 'rxjs/add/operator/distinctUntilChanged';
+import 'rxjs/add/operator/debounceTime';
 var SelectFilterComponent = (function (_super) {
     __extends(SelectFilterComponent, _super);
     function SelectFilterComponent() {

@@ -24,6 +24,7 @@ var Ng2SmartTableComponent = (function () {
         this.editConfirm = new EventEmitter();
         this.createConfirm = new EventEmitter();
         this.titleChange = new EventEmitter();
+        this.rowHover = new EventEmitter();
         this.defaultSettings = {
             mode: 'inline',
             selectMode: 'single',
@@ -94,34 +95,37 @@ var Ng2SmartTableComponent = (function () {
     Ng2SmartTableComponent.prototype.onUserSelectRow = function (row) {
         if (this.grid.getSetting('selectMode') !== 'multi') {
             this.grid.selectRow(row);
-            this._onUserSelectRow(row.getData());
-            this.onSelectRow(row);
+            this.emitUserSelectRow(row);
+            this.emitSelectRow(row);
         }
+    };
+    Ng2SmartTableComponent.prototype.onRowHover = function (row) {
+        this.rowHover.emit(row);
     };
     Ng2SmartTableComponent.prototype.multipleSelectRow = function (row) {
         this.grid.multipleSelectRow(row);
-        this._onUserSelectRow(row.getData());
-        this._onSelectRow(row.getData());
+        this.emitUserSelectRow(row);
+        this.emitSelectRow(row);
     };
     Ng2SmartTableComponent.prototype.onSelectAllRows = function ($event) {
         this.isAllSelected = !this.isAllSelected;
         this.grid.selectAllRows(this.isAllSelected);
         var selectedRows = this.grid.getSelectedRows();
-        this._onUserSelectRow(selectedRows[0], selectedRows);
-        this._onSelectRow(selectedRows[0]);
+        this.emitUserSelectRow(null);
+        this.emitSelectRow(null);
     };
     Ng2SmartTableComponent.prototype.onSelectRow = function (row) {
         this.grid.selectRow(row);
-        this._onSelectRow(row.getData());
+        this.emitSelectRow(row);
     };
     Ng2SmartTableComponent.prototype.onMultipleSelectRow = function (row) {
-        this._onSelectRow(row.getData());
+        this.emitSelectRow(row);
     };
     Ng2SmartTableComponent.prototype.initGrid = function () {
         var _this = this;
         this.source = this.prepareSource();
         this.grid = new Grid(this.source, this.prepareSettings());
-        this.grid.onSelectRow().subscribe(function (row) { return _this.onSelectRow(row); });
+        this.grid.onSelectRow().subscribe(function (row) { return _this.emitSelectRow(row); });
     };
     Ng2SmartTableComponent.prototype.prepareSource = function () {
         if (this.source instanceof DataSource) {
@@ -147,22 +151,24 @@ var Ng2SmartTableComponent = (function () {
     Ng2SmartTableComponent.prototype.filter = function ($event) {
         this.resetAllSelector();
     };
-    Ng2SmartTableComponent.prototype._onSelectRow = function (data) {
-        this.rowSelect.emit({
-            data: data || null,
-            source: this.source,
-        });
-    };
-    Ng2SmartTableComponent.prototype._onUserSelectRow = function (data, selected) {
-        if (selected === void 0) { selected = []; }
-        this.userRowSelect.emit({
-            data: data || null,
-            source: this.source,
-            selected: selected.length ? selected : this.grid.getSelectedRows(),
-        });
-    };
     Ng2SmartTableComponent.prototype.resetAllSelector = function () {
         this.isAllSelected = false;
+    };
+    Ng2SmartTableComponent.prototype.emitUserSelectRow = function (row) {
+        var selectedRows = this.grid.getSelectedRows();
+        this.userRowSelect.emit({
+            data: row ? row.getData() : null,
+            isSelected: row ? row.getIsSelected() : null,
+            source: this.source,
+            selected: selectedRows && selectedRows.length ? selectedRows.map(function (r) { return r.getData(); }) : [],
+        });
+    };
+    Ng2SmartTableComponent.prototype.emitSelectRow = function (row) {
+        this.rowSelect.emit({
+            data: row ? row.getData() : null,
+            isSelected: row ? row.getIsSelected() : null,
+            source: this.source,
+        });
     };
     return Ng2SmartTableComponent;
 }());
@@ -210,11 +216,15 @@ __decorate([
     Output(),
     __metadata("design:type", Object)
 ], Ng2SmartTableComponent.prototype, "titleChange", void 0);
+__decorate([
+    Output(),
+    __metadata("design:type", EventEmitter)
+], Ng2SmartTableComponent.prototype, "rowHover", void 0);
 Ng2SmartTableComponent = __decorate([
     Component({
         selector: 'ng2-smart-table',
         styles: [":host /deep/ *{box-sizing:border-box;font-family:\"Open Sans\",\"Helvetica Neue\",Helvetica,Arial,sans-serif}:host /deep/ button,:host /deep/ input,:host /deep/ optgroup,:host /deep/ select,:host /deep/ textarea{color:inherit;font:inherit;margin:0}:host /deep/ table{font-size:16px;line-height:1.5;color:#606c71;border-collapse:collapse;border-spacing:0;display:table;width:100%;max-width:100%;overflow:auto;word-break:normal;word-break:keep-all}:host /deep/ table tr th{font-weight:700}:host /deep/ table tr section{font-size:.75rem;font-weight:700}:host /deep/ table tr td,:host /deep/ table tr th{font-size:.875rem;margin:0;padding:.5rem 1rem;border:1px solid #e9ebec}:host /deep/ a{color:#1e6bb8;text-decoration:none}:host /deep/ a:hover{text-decoration:underline} /*# sourceMappingURL=ng2-smart-table.component.css.map */ "],
-        template: "<table [id]=\"grid.getSetting('attr.id')\" [ngClass]=\"grid.getSetting('attr.class')\"><thead ng2-st-thead *ngIf=\"!grid.getSetting('hideHeader') || !grid.getSetting('hideSubHeader')\" [grid]=\"grid\" [isAllSelected]=\"isAllSelected\" [source]=\"source\" [createConfirm]=\"createConfirm\" (create)=\"create.emit($event)\" (selectAllRows)=\"onSelectAllRows($event)\" (sort)=\"sort($event)\" (titleChange)=\"titleChange.emit($event)\" (filter)=\"filter($event)\"></thead><tbody ng2-st-tbody [grid]=\"grid\" [source]=\"source\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" (edit)=\"edit.emit($event)\" (delete)=\"delete.emit($event)\" (userSelectRow)=\"onUserSelectRow($event)\" (editRowSelect)=\"editRowSelect($event)\" (multipleSelectRow)=\"multipleSelectRow($event)\"></tbody></table><ng2-smart-table-pager *ngIf=\"grid.getSetting('pager.display')\" [source]=\"source\" [perPage]=\"grid.getSetting('pager.perPage')\" (changePage)=\"changePage($event)\"></ng2-smart-table-pager>",
+        template: "<table [id]=\"grid.getSetting('attr.id')\" [ngClass]=\"grid.getSetting('attr.class')\"><thead ng2-st-thead *ngIf=\"!grid.getSetting('hideHeader') || !grid.getSetting('hideSubHeader')\" [grid]=\"grid\" [isAllSelected]=\"isAllSelected\" [source]=\"source\" [createConfirm]=\"createConfirm\" (create)=\"create.emit($event)\" (selectAllRows)=\"onSelectAllRows($event)\" (sort)=\"sort($event)\" (titleChange)=\"titleChange.emit($event)\" (filter)=\"filter($event)\"></thead><tbody ng2-st-tbody [grid]=\"grid\" [source]=\"source\" [deleteConfirm]=\"deleteConfirm\" [editConfirm]=\"editConfirm\" (edit)=\"edit.emit($event)\" (delete)=\"delete.emit($event)\" (userSelectRow)=\"onUserSelectRow($event)\" (editRowSelect)=\"editRowSelect($event)\" (multipleSelectRow)=\"multipleSelectRow($event)\" (rowHover)=\"onRowHover($event)\"></tbody></table><ng2-smart-table-pager *ngIf=\"grid.getSetting('pager.display')\" [source]=\"source\" (changePage)=\"changePage($event)\"></ng2-smart-table-pager>",
     })
 ], Ng2SmartTableComponent);
 export { Ng2SmartTableComponent };

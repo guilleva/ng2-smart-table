@@ -37,4 +37,6 @@ export declare class Grid {
     getInitialSort(): any;
     getSelectedRows(): Array<any>;
     selectAllRows(status: any): void;
+    getFirstRow(): Row;
+    getLastRow(): Row;
 }

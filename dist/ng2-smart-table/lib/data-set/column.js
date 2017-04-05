@@ -27,7 +27,7 @@ var Column = (function () {
         return this.filterFunction;
     };
     Column.prototype.getConfig = function () {
-        return this.editor.config;
+        return this.editor && this.editor.config;
     };
     Column.prototype.getFilterType = function () {
         return this.filter && this.filter.type;

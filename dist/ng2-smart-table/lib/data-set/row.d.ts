@@ -14,6 +14,7 @@ export declare class Row {
     getCells(): Cell[];
     getClass(): string;
     getData(): any;
+    getIsSelected(): boolean;
     getNewData(): any;
     setData(data: any): any;
     process(): void;
