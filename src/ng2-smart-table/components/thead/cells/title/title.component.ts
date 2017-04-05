@@ -24,7 +24,7 @@ import { CompleterService, CompleterData, CompleterItem } from 'ng2-completer';
       <div *ngIf="column.title">{{ column.title }}</div>
     </a>
     <span class="ng2-smart-sort" *ngIf="!column.options && !column.isSortable">{{ column.title }}</span>
-  `
+  `,
 })
 export class TitleComponent implements OnInit {
   currentDirection = '';

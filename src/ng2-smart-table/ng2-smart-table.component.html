@@ -20,13 +20,13 @@
                       (delete)="delete.emit($event)"
                       (userSelectRow)="onUserSelectRow($event)"
                       (editRowSelect)="editRowSelect($event)"
-                      (multipleSelectRow)="multipleSelectRow($event)">
+                      (multipleSelectRow)="multipleSelectRow($event)"
+                      (rowHover)="onRowHover($event)">
   </tbody>
 
 </table>
 
 <ng2-smart-table-pager *ngIf="grid.getSetting('pager.display')"
                         [source]="source"
-                        [perPage]="grid.getSetting('pager.perPage')"
                         (changePage)="changePage($event)">
 </ng2-smart-table-pager>
