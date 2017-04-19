@@ -7,8 +7,7 @@ import { Column } from '../../../lib/data-set/column';
   template: `
     <div class="ng2-smart-title">
       <ng2-smart-table-title [source]="source" [column]="column"
-       (sort)="sort.emit($event)"
-       (autompleteSelect)="autompleteSelect.emit($event)">
+       (sort)="sort.emit($event)">
       </ng2-smart-table-title>
     </div>
   `,
@@ -19,6 +18,5 @@ export class ColumnTitleComponent {
   @Input() source: any;
 
   @Output() sort = new EventEmitter<any>();
-  @Output() autompleteSelect = new EventEmitter<any>();
 
 }

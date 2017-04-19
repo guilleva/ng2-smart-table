@@ -11,9 +11,9 @@ export class Column {
   sortDirection: string = '';
   defaultSortDirection: string = '';
   editor: { type: string, config: any, component: any } = { type: '', config: {}, component: null };
+  header: { component: any } = { component: null };
   filter: { type: string, config: any } = { type: '', config: {} };
   renderComponent: any = null;
-  options: any = null;
   compareFunction: Function;
   valuePrepareFunction: Function;
   filterFunction: Function;
@@ -51,9 +51,9 @@ export class Column {
     this.class = this.settings['class'];
     this.type = this.prepareType();
     this.editor = this.settings['editor'];
+    this.header = this.settings['header'];
     this.filter = this.settings['filter'];
     this.renderComponent = this.settings['renderComponent'];
-    this.options = this.settings['options'];
 
     this.isFilterable = typeof this.settings['filter'] === 'undefined' ? true : !!this.settings['filter'];
     this.defaultSortDirection = ['asc', 'desc']

@@ -1,48 +1,47 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  ViewChild,
+  SimpleChanges,
+  ViewContainerRef,
+  ComponentFactoryResolver,
+  OnChanges
+} from '@angular/core';
 
 import { DataSource } from '../../../../lib/data-source/data-source';
 import { Column } from '../../../../lib/data-set/column';
-import { CompleterService, CompleterData, CompleterItem } from 'ng2-completer';
 
 @Component({
   selector: 'ng2-smart-table-title',
   styleUrls: ['./title.component.scss'],
   template: `
-    <div *ngIf="column.options">
-          <ng2-completer
-            (selected)="columnSelected($event)"
-            [datasource]="dataService"
-            [(ngModel)]="selectedOption"
-            placeholder="Set column name"
-            [minSearchLength]="0"></ng2-completer>
+    <ng-template #dynamicTarget></ng-template>
+    <div *ngIf="!customComponent">
+      <a href="#" *ngIf="column.isSortable"
+                  (click)="_sort($event, column)"
+                  class="ng2-smart-sort-link sort"
+                  [ngClass]="currentDirection">
+        <div *ngIf="column.title">{{ column.title }}</div>
+      </a>
+      <span class="ng2-smart-sort" *ngIf="!column.isSortable">{{ column.title }}</span>
     </div>
-
-    <a href="#" *ngIf="!column.options && column.isSortable"
-                (click)="_sort($event, column)"
-                class="ng2-smart-sort-link sort"
-                [ngClass]="currentDirection">
-      <div *ngIf="column.title">{{ column.title }}</div>
-    </a>
-    <span class="ng2-smart-sort" *ngIf="!column.options && !column.isSortable">{{ column.title }}</span>
   `,
 })
-export class TitleComponent implements OnInit {
+export class TitleComponent implements OnInit, OnChanges {
   currentDirection = '';
   @Input() column: Column;
   @Input() source: DataSource;
+  @ViewChild('dynamicTarget', { read: ViewContainerRef }) dynamicTarget: any;
   @Output() sort = new EventEmitter<any>();
-  @Output() autompleteSelect = new EventEmitter<any>();
-  protected dataService: CompleterData;
 
-  protected selectedOption: string;
+  constructor(private resolver: ComponentFactoryResolver) { }
 
-  constructor(private completerService: CompleterService) { }
+  customComponent: any;
 
   ngOnInit() {
-    if (this.column.options) {
-      this.selectedOption = this.column.title;
-      this.dataService = this.completerService.local(this.column.options, 'title', 'title');
-    }
     this.source.onChanged().subscribe((elements) => {
       const sortConf = this.source.getSort();
 
@@ -58,14 +57,14 @@ export class TitleComponent implements OnInit {
     });
   }
 
-  columnSelected(selectedItem: CompleterItem) {
-    if (selectedItem && selectedItem.originalObject) {
-      const oldKey = this.column.id;
-      const newKey = selectedItem.originalObject.value;
-      if (oldKey !== newKey) {
-        this.source.renameColumn(oldKey, newKey);
-        this.autompleteSelect.emit({column: this.column,  selectedItem });
-      }
+  ngOnChanges(changes: SimpleChanges) {
+    if (this.column && this.column.header && !this.customComponent) {
+      const componentFactory = this.resolver.resolveComponentFactory(this.column.header.component);
+      this.customComponent = this.dynamicTarget.createComponent(componentFactory);
+
+      // set @Inputs and @Outputs of custom component
+      this.customComponent.instance.column = this.column;
+      this.customComponent.instance.title = this;
     }
   }
 
