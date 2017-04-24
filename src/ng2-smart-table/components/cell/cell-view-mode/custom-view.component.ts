@@ -32,6 +32,7 @@ export class CustomViewComponent implements OnInit, OnDestroy {
 
       // set @Inputs and @Outputs of custom component
       this.customComponent.instance.value = this.cell.getValue();
+      this.customComponent.instance.cell = this.cell;
     }
   }
 
