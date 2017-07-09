@@ -179,7 +179,7 @@ export class Ng2SmartTableComponent implements OnChanges {
       data: row ? row.getData() : null,
       isSelected: row ? row.getIsSelected() : null,
       source: this.source,
-      selected: selectedRows && selectedRows.length ? selectedRows.map((r: Row) => r.getData()) : [],
+      selected: selectedRows && selectedRows.length ? selectedRows : [],
     });
   }
 
