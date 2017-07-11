@@ -87,6 +87,10 @@ export class LocalDataSource extends DataSource {
     return Promise.resolve(data);
   }
 
+  getAllSync(): Array<any> {
+    return this.data.slice(0);
+  }
+
   reset(silent = false) {
     if (silent) {
       this.filterConf = {
