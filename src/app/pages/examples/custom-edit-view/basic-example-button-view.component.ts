@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 
-import { ViewCell } from '../../../../ng2-smart-table';
+import { ViewCell, Cell } from '../../../../ng2-smart-table';
 
 @Component({
   selector: 'button-view',
@@ -12,6 +12,7 @@ export class ButtonViewComponent implements ViewCell, OnInit {
   renderValue: string;
 
   @Input() value: string | number;
+  @Input() cell: Cell;
 
   constructor() { }
 
